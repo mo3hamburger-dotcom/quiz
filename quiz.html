@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>きゃんちゅークイズ</title>
+<style>
+:root{--p:#ff5f9f;--p2:#ff9ac3;--bg:#fff6fa;--card:#fff;--tx:#382e35;--mut:#82747d;--ok:#1d9b63;--ng:#db4d60;--blue:#6658d7}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#fff0f6,#fffafd);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:var(--tx);min-height:100vh}
+.wrap{width:min(760px,100%);margin:auto;padding:14px 14px 50px}.logo{text-align:center;font-size:clamp(30px,8vw,48px);font-weight:950;color:var(--p);padding:18px 0 2px}.sub{text-align:center;color:var(--mut);font-size:13px;margin-bottom:15px}
+.card{background:var(--card);border:1px solid #ffe0ec;border-radius:24px;padding:20px;box-shadow:0 10px 35px rgba(255,95,159,.11);margin-bottom:14px}
+h2{margin:2px 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}
+select,input{width:100%;border:1px solid #ffd0e2;border-radius:13px;padding:13px;background:white;font-size:16px;color:var(--tx)}
+button{border:0;border-radius:15px;padding:14px;font-size:16px;font-weight:900;cursor:pointer}.primary{width:100%;background:linear-gradient(135deg,var(--p),var(--p2));color:white;margin-top:10px}.secondary{width:100%;background:#f4f1f3;color:var(--tx);margin-top:8px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}.tab{background:#f5f1f4}.tab.on{background:var(--p);color:white}
+.stats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}.badge{background:#fff0f6;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850}.cat{font-size:13px;color:var(--p);font-weight:900}.question{font-size:clamp(20px,5vw,28px);font-weight:900;line-height:1.55;min-height:120px;display:flex;align-items:center}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}.yes{background:#fff0f6;color:#d93b7c;border:2px solid #ffc2db}.no{background:#f3f1ff;color:#5d52c6;border:2px solid #dad6ff}
+.result{display:none;margin-top:16px;padding:16px;border-radius:15px;line-height:1.7}.result.ok{display:block;background:#ecfff6;border:1px solid #bde9d4}.result.ng{display:block;background:#fff0f2;border:1px solid #ffc5cc}.rt{font-size:20px;font-weight:950}.source{font-size:12px;color:var(--mut);margin-top:8px}
+.rank{width:100%;border-collapse:collapse}.rank th,.rank td{padding:9px 6px;border-bottom:1px solid #f1e5eb;text-align:left;font-size:13px}.rank th{color:var(--mut)}
+.pill{display:inline-block;background:#f4f1f3;border-radius:99px;padding:4px 8px;font-size:11px}.hidden{display:none!important}.center{text-align:center}.notice{font-size:12px;color:var(--mut);line-height:1.6}
+.playerTurn{text-align:center;background:#fff0f6;padding:10px;border-radius:14px;font-weight:900;margin-bottom:12px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.card{padding:17px}.question{min-height:105px}.answers button{font-size:17px;padding:16px 8px}}
+</style>
+</head>
+<body><div class="wrap">
+<div class="logo">きゃんちゅークイズ</div><div class="sub">CANDY TUNE ファン検定</div>
+
+<section id="setup" class="card">
+ <div class="tabs"><button id="soloTab" class="tab on">1人で遊ぶ</button><button id="vsTab" class="tab">2人対戦</button></div>
+ <div class="grid">
+  <div class="field"><label>難易度</label><select id="difficulty"><option value="easy">初級</option><option value="normal" selected>中級</option><option value="hard">超難問</option><option value="mix">全部ミックス</option></select></div>
+  <div class="field"><label>出題数</label><select id="count"><option>10</option><option>20</option><option>30</option><option>50</option><option>100</option></select></div>
+  <div class="field"><label>ジャンル</label><select id="genre"><option value="all">全部</option><option value="member">メンバー</option><option value="music">楽曲知識</option><option value="history">グループ・歴史</option><option value="release">リリース・作品</option><option value="lyrics">歌詞の穴埋め</option></select></div>
+  <div class="field"><label>メンバー別</label><select id="memberFilter"><option value="all">全メンバー</option></select></div>
+ </div>
+ <div id="soloNames" class="field"><label>ランキング用ニックネーム</label><input id="soloName" maxlength="12" placeholder="例：あめちゃん"></div>
+ <div id="vsNames" class="grid hidden"><div class="field"><label>プレイヤー1</label><input id="p1" maxlength="12" value="プレイヤー1"></div><div class="field"><label>プレイヤー2</label><input id="p2" maxlength="12" value="プレイヤー2"></div></div>
+ <button id="start" class="primary">クイズスタート！</button>
+ <p class="notice">公式の作品・プロフィール情報を元に出題します。歌詞の穴埋めは下で登録したフレーズから出題します。ランキングと登録したフレーズは、この端末に保存されます。</p>
+</section>
+<section class="card"><h2>🎵 歌詞の穴埋めを登録</h2><p class="notice">手元にある短い歌詞フレーズを登録してください。空欄にしたい部分を［　］で囲みます。例：きらきら［ひかる］星。公開サイトに登録した歌詞は、この端末でのみ表示されます。</p><div class="field"><label>曲名</label><input id="lyricSong" placeholder="曲名"></div><div class="field"><label>穴埋め用の短いフレーズ</label><input id="lyricLine" placeholder="前半［答え］後半"></div><button id="addLyric" class="secondary">穴埋め問題を追加</button><div id="lyricList" class="notice"></div></section>
+
+<section id="quiz" class="card hidden">
+ <div id="turn" class="playerTurn hidden"></div>
+ <div class="stats"><span id="prog" class="badge"></span><span id="score" class="badge"></span><span id="level" class="badge"></span></div>
+ <div id="cat" class="cat"></div><div id="q" class="question"></div>
+ <div id="answers" class="answers"><button class="yes" data-a="true">○ 正しい</button><button class="no" data-a="false">× 間違い</button></div>
+ <div id="lyricAnswer" class="hidden"><input id="lyricGuess" autocomplete="off" placeholder="空欄の言葉を入力"><button id="submitLyric" class="primary">回答する</button></div>
+ <div id="result" class="result"><div id="rt" class="rt"></div><div id="exp"></div><div id="src" class="source"></div></div>
+ <button id="next" class="primary hidden">次の問題へ</button>
+</section>
+
+<section id="finish" class="card hidden center"><h2>結果発表！</h2><div id="final"></div><button id="again" class="primary">もう一度遊ぶ</button></section>
+
+<section class="card"><h2>🏆 この端末のランキング</h2><table class="rank"><thead><tr><th>#</th><th>名前</th><th>得点</th><th>モード</th></tr></thead><tbody id="ranking"></tbody></table><button id="clearRank" class="secondary">ランキングを消去</button></section>
+</div>
+
+<script>
+const MEMBERS=[
+ {name:"桐原美月",birthday:"2003年2月21日"},{name:"福山梨乃",birthday:"1997年12月24日"},
+ {name:"小川奈々子",birthday:"1999年10月1日"},{name:"南なつ",birthday:"2001年3月17日"},
+ {name:"立花琴未",birthday:"2002年5月25日"},{name:"宮野静",birthday:"2002年5月30日"},
+ {name:"村川緋杏",birthday:"1999年12月3日"}
+];
+const WORKS=[
+ {title:"CANDY TUNE",date:"2023年3月7日",kind:"1st Digital Album",tracks:["キス・ミー・パティシエ","hanamaru","ナナイロプロローグ","未完な青春"]},
+ {title:"TUNE MY WAY",date:"2023年4月7日",kind:"Digital Single",credit:"作詞・作曲：クボナオキ / 振付：SACO MAKITA"},
+ {title:"CATCH YOU",date:"2023年5月20日",kind:"Digital"},
+ {title:"きゅきゅきゅキュート",date:"2023年6月27日",kind:"Digital"},
+ {title:"WAO！アオハル！",date:"2023年9月27日",kind:"Digital"},
+ {title:"Twilight Dilemma",date:"2023年10月18日",kind:"Digital"},
+ {title:"必殺あざとポーズ",date:"2023年11月17日",kind:"Digital"},
+ {title:"備えあれば無問題",date:"2024年2月16日",kind:"Digital"},
+ {title:"いえなかったことば〜ありがとう〜",date:"2024年3月8日",kind:"Digital"},
+ {title:"倍倍FIGHT!",date:"2024年4月24日",kind:"Digital"},
+ {title:"レイドバックジャーニー",date:"2024年6月19日",kind:"Digital"},
+ {title:"キス・ミー・パティシエ",date:"2024年8月7日",kind:"1st Single CD"},
+ {title:"君もゾンビですか ゾンビですね",date:"2024年10月18日",kind:"Digital"},
+ {title:"レベチかわいい！",date:"2025年3月12日",kind:"Digital"},
+ {title:"絶対きゃんちゅー宣言っ！",date:"2025年4月4日",kind:"Digital"},
+ {title:"推し♡好き♡しんどい",date:"2025年4月23日",kind:"2nd Single CD"},
+ {title:"夏しかサマーー！♡",date:"2025年7月14日",kind:"Digital"},
+ {title:"LASTING TUNE",date:"2025年9月10日",kind:"Digital"},
+ {title:"倍倍FIGHT!",date:"2025年10月1日",kind:"1st Album"},
+ {title:"HAPPY BOUNCE BIRTHDAY",date:"2026年4月22日",kind:"3rd Single CD",tracks:["HAPPY BOUNCE BIRTHDAY","HOT!SCOOP!","すーぱー優勝ちゅーーん！","シャットダウン！","いえなかったことば〜ありがとう〜"]},
+ {title:"総意♡So Free / スペシャル感謝祭",date:"2026年9月30日",kind:"4th Single CD"}
+];
+const GROUP=[
+ {text:"CANDY TUNEは7人組アイドルグループである。",a:true,e:"公式プロフィールでは7人組と紹介されています。"},
+ {text:"CANDY TUNEはKAWAII LAB.から誕生したグループである。",a:true,e:"アソビシステムのアイドルプロジェクトKAWAII LAB.よりデビューしました。"},
+ {text:"CANDY TUNEのデビュー日は2023年3月14日である。",a:true,e:"公式プロフィール記載のデビュー日は2023年3月14日です。"},
+ {text:"グループ名のTUNEには「旋律」という意味が込められている。",a:true,e:"公式プロフィールのグループ名由来でTUNE（旋律）と説明されています。"},
+ {text:"CANDY TUNEは2024年3月14日にデビューした。",a:false,e:"デビュー日は2023年3月14日です。"},
+ {text:"CANDY TUNEは8人組である。",a:false,e:"公式プロフィールでは7人組です。"},
+ {text:"2026年2月発売のKAWAII LAB. BEST ALBUMで、CANDY TUNEのファン投票選出曲として「必殺あざとポーズ」が収録された。",a:true,e:"公式発表ではCANDY TUNEのファン投票選出曲は「必殺あざとポーズ」です。"}
+];
+const THIRD=["HAPPY BOUNCE BIRTHDAY","HOT!SCOOP!","すーぱー優勝ちゅーーん！","シャットダウン！","いえなかったことば〜ありがとう〜"];
+const FIRSTDA=["キス・ミー・パティシエ","hanamaru","ナナイロプロローグ","未完な青春"];
+const SRC={profile:"CANDY TUNE公式 PROFILE",disc:"CANDY TUNE公式 DISCOGRAPHY",news:"CANDY TUNE公式 INFORMATION"};
+const $=x=>document.getElementById(x),pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const dateNum=s=>{let m=s.match(/(\d+)年(\d+)月(\d+)日/);return m?+m[1]*10000 + +m[2]*100 + +m[3]:0};
+function wrongDate(w){let a=WORKS.filter(x=>x.date!==w.date);return pick(a).date}
+function diffOK(d,want){return want==="mix"||d===want}
+function qMember(filter,d){
+ let pool=filter==="all"?MEMBERS:MEMBERS.filter(m=>m.name===filter);let m=pick(pool), mode=d==="easy"?Math.floor(Math.random()*2):Math.floor(Math.random()*5);
+ if(mode===0)return Q("member",d,`${m.name}はCANDY TUNEのメンバーである。`,true,`${m.name}さんは公式プロフィール掲載メンバーです。`,SRC.profile,m.name);
+ if(mode===1)return Q("member",d,`${m.name}の誕生日は${m.birthday}である。`,true,`公式プロフィールでは${m.name}さんの誕生日は${m.birthday}です。`,SRC.profile,m.name);
+ let o=pick(MEMBERS.filter(x=>x.name!==m.name));
+ if(mode===2)return Q("member",d,`${m.name}の誕生日は${o.birthday}である。`,false,`${m.name}さんの誕生日は${m.birthday}です。`,SRC.profile,m.name);
+ if(mode===3){let younger=Number(m.birthday.slice(0,4))>Number(o.birthday.slice(0,4));return Q("member","hard",`${m.name}は${o.name}より後の年に生まれている。`,younger,`${m.name}さんは${m.birthday}、${o.name}さんは${o.birthday}生まれです。`,SRC.profile,m.name)}
+ return Q("member","hard",`${m.name}と${o.name}は同じ生まれ年である。`,m.birthday.slice(0,4)===o.birthday.slice(0,4),`${m.name}さんは${m.birthday}、${o.name}さんは${o.birthday}生まれです。`,SRC.profile,m.name);
+}
+function qMusic(d){
+ let w=pick(WORKS);
+ if(d==="easy")return Q("music","easy",`「${w.title}」はCANDY TUNE公式ディスコグラフィーに掲載されている作品である。`,true,`「${w.title}」は公式ディスコグラフィー掲載作品です。`,SRC.disc);
+ if(d==="normal"){
+   if(Math.random()<.5)return Q("music","normal",`「${w.title}」のリリース日は${w.date}である。`,true,`公式掲載日は${w.date}です。`,SRC.disc);
+   return Q("music","normal",`「${w.title}」のリリース日は${wrongDate(w)}である。`,false,`公式掲載日は${w.date}です。`,SRC.disc);
+ }
+ let a=pick(WORKS),b=pick(WORKS.filter(x=>x!==a));let ans=dateNum(a.date)<dateNum(b.date);
+ return Q("music","hard",`「${a.title}」は「${b.title}」より先にリリースされた。`,ans,`「${a.title}」は${a.date}、「${b.title}」は${b.date}です。`,SRC.disc);
+}
+function qTracks(d){
+ if(Math.random()<.5){
+  let t=pick(THIRD),good=Math.random()<.55,shown=good?t:pick(FIRSTDA.filter(x=>!THIRD.includes(x)));
+  return Q("release",d,`「${shown}」は3rdシングルCD「HAPPY BOUNCE BIRTHDAY」の収録曲として公式発表された。`,good,good?`公式発表の収録曲に「${shown}」が含まれます。`:`「${shown}」は公式発表された同CDの5曲には含まれません。`,SRC.news);
+ }else{
+  let t=pick(FIRSTDA),good=Math.random()<.55,shown=good?t:pick(THIRD.filter(x=>!FIRSTDA.includes(x)));
+  return Q("release",d,`「${shown}」は2023年3月7日配信の1st Digital Album「CANDY TUNE」の歌唱曲4曲の一つである。`,good,good?`1st Digital Albumの歌唱曲に「${shown}」が収録されています。`:`同作の歌唱曲4曲は「キス・ミー・パティシエ」「hanamaru」「ナナイロプロローグ」「未完な青春」です。`,SRC.disc);
+ }
+}
+function qHistory(d){let g=pick(GROUP);return Q("history",d,g.text,g.a,g.e,g.text.includes("BEST")?SRC.news:SRC.profile)}
+function qCredit(){
+ let good=Math.random()<.5;
+ return Q("music","hard",good?`「TUNE MY WAY」はクボナオキが作詞・作曲を担当した。`:`「TUNE MY WAY」の振付はクボナオキが担当した。`,good,good?`公式ディスコグラフィーでは作詞・作曲はクボナオキと記載されています。`:`公式記載では振付はSACO MAKITA、作詞・作曲はクボナオキです。`,SRC.disc);
+}
+function qMemberExtra(filter,d){
+ let pool=filter==="all"?MEMBERS:MEMBERS.filter(m=>m.name===filter),m=pick(pool),parts=m.birthday.match(/(\d+)年(\d+)月(\d+)日/),year=+parts[1],month=+parts[2],day=+parts[3];
+ let mode=Math.floor(Math.random()*5),good=Math.random()<.5;
+ if(mode===0)return Q("member",d,`${m.name}の誕生月は${good?month:month%12+1}月である。`,good,`${m.name}の誕生日は${m.birthday}です。`,SRC.profile,m.name);
+ if(mode===1)return Q("member",d,`${m.name}の誕生日の日付は${good?day:day%28+1}日である。`,good,`${m.name}の誕生日は${m.birthday}です。`,SRC.profile,m.name);
+ if(mode===2)return Q("member",d,`${m.name}は${good?year:year+1}年生まれである。`,good,`${m.name}は${m.birthday}生まれです。`,SRC.profile,m.name);
+ let other=pick(MEMBERS.filter(x=>x!==m)),om=+other.birthday.match(/年(\d+)月/)[1];
+ if(mode===3)return Q("member",d,`${m.name}と${other.name}は同じ誕生月である。`,month===om,`誕生月はそれぞれ${month}月、${om}月です。`,SRC.profile,m.name);
+ return Q("member",d,`${m.name}の誕生日は${month}月${good?day:day%28+1}日である。`,good,`${m.name}の誕生日は${m.birthday}です。`,SRC.profile,m.name);
+}
+function qWorkExtra(d){
+ let w=pick(WORKS),year=+w.date.slice(0,4),mode=Math.floor(Math.random()*4),good=Math.random()<.5;
+ if(mode===0)return Q("music",d,`「${w.title}」は${good?year:year+1}年にリリースされた。`,good,`公式のリリース表記は${w.date}です。`,SRC.disc);
+ if(mode===1){let month=+w.date.match(/年(\d+)月/)[1];return Q("music",d,`「${w.title}」は${good?month:month%12+1}月にリリースされた。`,good,`公式のリリース表記は${w.date}です。`,SRC.disc)}
+ if(mode===2)return Q("release",d,`「${w.title}」は${good?w.kind:"Blu-ray / DVD"}作品として掲載された。`,good,`公式表記は${w.kind}です。`,SRC.disc);
+ let other=pick(WORKS.filter(x=>x!==w&&x.date!==w.date));return Q("music",d,`「${w.title}」は「${other.title}」より後にリリースされた。`,dateNum(w.date)>dateNum(other.date),`リリース表記はそれぞれ${w.date}、${other.date}です。`,SRC.disc);
+}
+const lyricKey="kyanchuLyricsV1";
+function getLyrics(){try{let v=JSON.parse(localStorage.getItem(lyricKey)||"[]");return Array.isArray(v)?v.filter(x=>x&&typeof x.song==="string"&&typeof x.line==="string"&&typeof x.answer==="string"):[]}catch{return []}}
+function renderLyrics(){let a=getLyrics();$("lyricList").textContent=`登録済み：${a.length}問`;}
+$("addLyric").onclick=()=>{let song=$("lyricSong").value.trim(),raw=$("lyricLine").value.trim(),m=raw.match(/^(.*?)［([^［］]+)］(.*?)$/);if(!song||!m||!m[2].trim()){alert("曲名と［答え］を含む短いフレーズを入力してください。");return}let a=getLyrics();a.push({song:song.slice(0,80),line:(m[1]+"［　］"+m[3]).slice(0,180),answer:m[2].trim().slice(0,60)});localStorage.setItem(lyricKey,JSON.stringify(a));$("lyricSong").value="";$("lyricLine").value="";renderLyrics()};renderLyrics();
+function qLyric(d){let x=pick(getLyrics());return {...Q("lyrics",d==="mix"?"normal":d,`「${x.song}」の歌詞：${x.line}`,x.answer,`空欄は「${x.answer}」です。`,"この端末で登録したフレーズ"),key:`${x.song}|${x.line}|${x.answer}`}}
+function Q(genre,d,text,a,e,s,member=""){return{genre,d,text,a,e,s,member}}
